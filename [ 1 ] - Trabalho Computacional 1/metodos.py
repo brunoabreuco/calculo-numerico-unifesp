@@ -59,3 +59,39 @@ def bisseccao(f, a, b, eps=1e-8, max_iter=200):
 
     # Se max_iter for atingido, retorna a raiz aproximada e o histórico de iterações
     return xk, historic
+
+def newton(f, df, x0, eps=1e-8, max_iter=200):
+    # Chute inicial do x_k.
+    xk = x0
+    
+    # Histórico de iterações.
+    historic = []
+
+    # Itera até atingir o número máximo de iterações. De 1 até max_iter+1 para melhor visualização do número de iterações.
+    # IMPORTANTE: Entenda xk como x_k e xk_next como x_{k+1}.
+    for k in range(1, max_iter+1):
+        # Cálculo de f'(x_k), para evitar chamar f() desnecessariamente.
+        dfxk = df(xk)
+
+        # Validação de entrada: O método de Newton deve tratar f'(x_k) = 0.
+        if dfxk == 0:
+            raise ValueError
+        
+        # Cálculo do x_k+1
+        xk_next = xk - f(xk)/dfxk
+
+        # Cálculo do erro absoluto
+        error = abs(xk_next - xk)
+
+        # Adiciona a iteração atual ao histórico
+        historic.append({"k": k, "xk": xk_next, "error": error})
+
+        # Se o erro absoluto for menor que eps OU o valor absoluto de f(x_k+1) for menor que eps, então xk é uma raiz aproximada.
+        if error < eps or abs(f(xk_next)) < eps: 
+            return xk_next, historic
+        
+        # Atualiza o chute inicial do x_k.
+        xk = xk_next
+
+    # Se max_iter for atingido, retorna a raiz aproximada e o histórico de iterações
+    return xk, historic
