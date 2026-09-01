@@ -3,25 +3,26 @@ def bisseccao(f, a, b, eps=1e-8, max_iter=200):
     if f(a) * f(b) >= 0:
         raise ValueError
 
-    # Chute inicial do x_k
-    xk_previous = a 
+    # Chute inicial do x_k.
+    xk = a 
 
     # Histórico de iterações.
     historic = []
 
-    # Itera até atingir o número máximo de iterações. De 1 até max_iter+1 para melhor visualização do número de iterações.
+    # Itera até atingir o número máximo de iterações. De 1 até max_iter+1 para melhor visualização do número de iterações. 
+    # IMPORTANTE: Entenda xk como x_k e xk_next como x_{k+1}.
     for k in range(1, max_iter+1):
-        # Cálculo do x_k
-        xk = (a+b)/2
+        # Cálculo do x_{k+1}
+        xk_next = (a+b)/2
 
         # Cálculo do erro absoluto
-        error = abs(xk - xk_previous)
+        error = abs(xk_next - xk)
 
-        # Cálculo de f(x_k), para evitar chamar f() desnecessariamente
-        fxk = f(xk)
+        # Cálculo de f(x_{k+1}), para evitar chamar f() desnecessariamente.
+        fxk_next = f(xk_next)
 
         # Adiciona a iteração atual ao histórico
-        historic.append({"k": k, "xk": xk, "error": error})
+        historic.append({"k": k, "xk": xk_next, "error": error})
         
         """
         Os critérios definidos neste Trabalho Computacional são:
@@ -41,19 +42,94 @@ def bisseccao(f, a, b, eps=1e-8, max_iter=200):
 
         Assim, seguimos com os critérios do Trabalho Computacional que estão definidos abaixo.
         """
-        # Se o erro absoluto for menor que eps OU o valor absoluto de f(x_k+1) for menor que eps, então xk é uma raiz aproximada.
-        if error < eps or abs(fxk) < eps: 
-            return xk, historic
+        # Se o erro absoluto for menor que eps OU o valor absoluto de f(x_k+1) for menor que eps, então x_{k+1} é uma raiz aproximada.
+        if error < eps or abs(fxk_next) < eps: 
+            return xk_next, historic
 
-        # Se f(a) * f(x_k) < 0, então a raiz está no intervalo [a, x_k]. Atualiza-se o intervalo com b = x_k
-        elif f(a) * fxk < 0:
-            b = xk
+        # Se f(a) * f(x_{k+1}) < 0, então a raiz está no intervalo [a, x_{k+1}]. Atualiza-se o intervalo com b = x_{k+1}.
+        elif f(a) * fxk_next < 0:
+            b = xk_next
 
-        # Se f(a) * f(x_k) >= 0, então a raiz está no intervalo [x_k, b]. Atualiza-se o intervalo com a = x_k
+        # Se f(a) * f(x_{k+1}) >= 0, então a raiz está no intervalo [x_{k+1}, b]. Atualiza-se o intervalo com a = x_{k+1}.
         else:
-            a = xk
+            a = xk_next
 
-        xk_previous = xk # Atualiza o chute inicial do x_k
+        # Atualiza o chute inicial do x_k.
+        xk = xk_next 
+
+    # Se max_iter for atingido, retorna a raiz aproximada e o histórico de iterações
+    return xk, historic
+
+def newton(f, df, x0, eps=1e-8, max_iter=200):
+    # Chute inicial do x_k.
+    xk = x0
+    
+    # Histórico de iterações.
+    historic = []
+
+    # Itera até atingir o número máximo de iterações. De 1 até max_iter+1 para melhor visualização do número de iterações.
+    # IMPORTANTE: Entenda xk como x_k e xk_next como x_{k+1}.
+    for k in range(1, max_iter+1):
+        # Cálculo de f'(x_k), para evitar chamar f() desnecessariamente.
+        dfxk = df(xk)
+
+        # Validação de entrada: O método de Newton deve tratar f'(x_k) = 0.
+        if dfxk == 0:
+            raise ValueError
+        
+        # Cálculo do x_k+1
+        xk_next = xk - f(xk)/dfxk
+
+        # Cálculo do erro absoluto
+        error = abs(xk_next - xk)
+
+        # Adiciona a iteração atual ao histórico
+        historic.append({"k": k, "xk": xk_next, "error": error})
+
+        # Se o erro absoluto for menor que eps OU o valor absoluto de f(x_k+1) for menor que eps, então xk é uma raiz aproximada.
+        if error < eps or abs(f(xk_next)) < eps: 
+            return xk_next, historic
+        
+        # Atualiza o chute inicial do x_k.
+        xk = xk_next
+
+    # Se max_iter for atingido, retorna a raiz aproximada e o histórico de iterações
+    return xk, historic
+
+def secante(f, x0, x1, eps=1e-8, max_iter=200):
+    # Chutes iniciais para x_k e x_{k-1}.
+    xk_previous = x0
+    xk = x1
+    
+    # Histórico de iterações.
+    historic = []
+
+    # Itera até atingir o número máximo de iterações. De 1 até max_iter+1 para melhor visualização do número de iterações.
+    # IMPORTANTE: Entenda xk como x_k e xk_previous como x_{k-1} e xk_next como x_{k+1}.
+    for k in range(1, max_iter+1):
+        # Cálculo do denominador para evitar chamar f() desnecessariamente.
+        denominator = f(xk) - f(xk_previous)
+
+        # Validação de entrada: A secante deve tratar denominador nulo.
+        if denominator == 0:
+            raise ValueError
+        
+        # Cálculo do x_k+1
+        xk_next = xk - (f(xk) * (xk - xk_previous)) / denominator
+
+        # Cálculo do erro absoluto
+        error = abs(xk_next - xk)
+
+        # Adiciona a iteração atual ao histórico
+        historic.append({"k": k, "xk": xk_next, "error": error})
+
+        # Se o erro absoluto for menor que eps OU o valor absoluto de f(x_k+1) for menor que eps, então xk é uma raiz aproximada.
+        if error < eps or abs(f(xk_next)) < eps: 
+            return xk_next, historic
+        
+        # Atualiza os chutes iniciais para x_k e x_{k-1}.
+        xk_previous = xk
+        xk = xk_next
 
     # Se max_iter for atingido, retorna a raiz aproximada e o histórico de iterações
     return xk, historic
