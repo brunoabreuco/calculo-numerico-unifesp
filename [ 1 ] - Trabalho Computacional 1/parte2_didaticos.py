@@ -1,4 +1,6 @@
-
+#-------------------------
+# exercicio 1
+#-------------------------
 def f(x):
     return x**3 - 9*x + 3
 
@@ -32,6 +34,21 @@ tabelar_sinais(f, -5, 5, 6)
 tabelar_sinais(f, -5, 5, 4)
 
 
+#-------------------------
+# exercicio 2
+#-------------------------
 
+import math
+
+epsilons = [10**-2, 10**-4, 10**-6, 10**-8, 10**-10]
+
+for epsilon in epsilons:
+    k = (math.log(1) - math.log(epsilon)) / math.log(2)
+    print(epsilon,"-", k)
+
+
+#-------------------------
+# exercicio 3
+#-------------------------
 
         
