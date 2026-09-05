@@ -32,11 +32,13 @@ def tabelar_sinais (f, a, b , n):
         cordXanterior+=tamanhoPasso
     print(lista)
 
+print("\n funcao: x³-9x+3")
 tabelar_sinais(f, -5, 5, 21)
 tabelar_sinais(f, -5, 5, 11)
 tabelar_sinais(f, -5, 5, 6)
 tabelar_sinais(f, -5, 5, 4)
 
+print("\n funcao: (x-1.05)(x-1.15)(x-3)")
 tabelar_sinais(fb, 0, 4, 9)
 tabelar_sinais(fb, 0, 4, 17)
 tabelar_sinais(fb, 0, 4, 41)
@@ -99,3 +101,54 @@ print(f"{'Metodo':<12} | {'Iteracoes':<10} | {'Avaliacoes de f':<16} | {'Avaliac
 print("-" * 62)
 for linha in tabela_ex3:
     print(f"{linha[0]:<12} | {linha[1]:<10} | {linha[2]:<16} | {linha[3]}")
+
+
+
+
+#-------------------------
+# exercicio 4
+#-------------------------
+print("\n\n")
+print("Exercicio 4")
+
+import math
+from metodos import newton, secante
+
+# Raiz exata fornecida
+xi = 0.3376089559658377
+
+# Rodando os métodos
+_, hist_newton = newton(f, df, x0=0.5)
+_, hist_secante = secante(f, 0, 1)
+
+def calcular_ordem(hist, xi):
+    erros = [abs(item["xk"] - xi) for item in hist]
+    ordens = []
+    
+    for i in range(2, len(erros)):
+        ek_minus_1 = erros[i-2]
+        ek = erros[i-1]
+        ek_plus_1 = erros[i]
+        
+        if ek_minus_1 == 0 or ek == 0 or ek_plus_1 == 0:
+            break
+            
+        pk = math.log(ek_plus_1 / ek) / math.log(ek / ek_minus_1)
+        ordens.append((i+1, pk))
+        
+    return ordens
+
+ordens_newton = calcular_ordem(hist_newton, xi)
+ordens_secante = calcular_ordem(hist_secante, xi)
+
+print("METODO DE NEWTON (Teorico: p = 2)")
+print(f"{'Iteracao (k)':<15} | {'p_k empirico':<15}")
+print("-" * 35)
+for it, pk in ordens_newton:
+    print(f"{it:<15} | {pk:.4f}")
+
+print("\nMETODO DA SECANTE (Teorico: p ~= 1.618)")
+print(f"{'Iteracao (k)':<15} | {'p_k empirico':<15}")
+print("-" * 35)
+for it, pk in ordens_secante:
+    print(f"{it:<15} | {pk:.4f}")
