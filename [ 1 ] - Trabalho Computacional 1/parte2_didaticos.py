@@ -1,7 +1,7 @@
 #-------------------------
 # exercicio 1
 #-------------------------
-print("Exercicio 1")
+print("Exercicio 1 - Isolamento")
 def f(x):
     return x**3 - 9*x + 3
 
@@ -32,7 +32,7 @@ def tabelar_sinais (f, a, b , n):
         cordXanterior+=tamanhoPasso
     print(lista)
 
-print("\n funcao: x³-9x+3")
+print("\n funcao: x3-9x+3")
 tabelar_sinais(f, -5, 5, 21)
 tabelar_sinais(f, -5, 5, 11)
 tabelar_sinais(f, -5, 5, 6)
@@ -49,7 +49,7 @@ tabelar_sinais(fb, 0, 4, 401)
 # exercicio 2
 #-------------------------
 print("\n\n")
-print("Exercicio 2")
+print("Exercicio 2 - Previsao x realidade na bisseccao")
 
 import math
 from metodos import bisseccao, newton, secante
@@ -72,7 +72,7 @@ for epsilon in epsilons:
 # exercicio 3
 #-------------------------
 print("\n\n")
-print("Exercicio 3")
+print("Exercicio 3 - Custo real: avaliacao de funcao")
 
 from metodos import bisseccao, newton, secante
 
@@ -109,7 +109,7 @@ for linha in tabela_ex3:
 # exercicio 4
 #-------------------------
 print("\n\n")
-print("Exercicio 4")
+print("Exercicio 4 - Ordem empirica de convergencia")
 
 import math
 from metodos import newton, secante
@@ -152,3 +152,76 @@ print(f"{'Iteracao (k)':<15} | {'p_k empirico':<15}")
 print("-" * 35)
 for it, pk in ordens_secante:
     print(f"{it:<15} | {pk:.4f}")
+
+
+#-------------------------
+# exercicio 5
+#-------------------------
+print("\n\n")
+print("Exercicio 5 - Os modos de falha de Newton")
+
+import math
+from metodos import newton
+
+# Caso (a): f(x) = x^3 - 2x + 2, x0 = 0, 10 iterações
+def fa(x):
+    return x**3 - 2*x + 2
+
+def dfa(x):
+    return 3*x**2 - 2
+
+_, hist_a = newton(fa, dfa, x0=0, max_iter=10)
+
+print("\nCASO (a)")
+print(f"{'k':<5} | {'xk':<15}")
+print("-" * 25)
+for item in hist_a:
+    print(f"{item['k']:<5} | {item['xk']:.6f}")
+
+
+# Caso (b): f(x) = arctan(x)
+def fb_caso(x):
+    return math.atan(x)
+
+def dfb_caso(x):
+    return 1 / (1 + x**2)
+
+print("\nCASO (b): x0 = 2.0")
+try:
+    _, hist_b2 = newton(fb_caso, dfb_caso, x0=2.0, max_iter=10)
+    for item in hist_b2[:5]:
+        print(f"k={item['k']}, xk={item['xk']:.4f}")
+except Exception as e:
+    print(f"Divergiu/Estourou com OverflowError: {e}")
+
+print("\nCASO (b): x0 = 1.0")
+try:
+    _, hist_b1 = newton(fb_caso, dfb_caso, x0=1.0, max_iter=10)
+    for item in hist_b1[:5]:
+        print(f"k={item['k']}, xk={item['xk']:.4f}")
+except Exception as e:
+    print(f"Erro: {e}")
+
+# Investigando o limite para x0
+print("\nCASO (b): Investigando limite de x0")
+for x_inicial in [1.39, 1.391, 1.40]:
+    try:
+        _, h = newton(fb_caso, dfb_caso, x0=x_inicial, max_iter=15)
+        print(f"x0 = {x_inicial} convergiu em {len(h)} iteracoes (ultimo xk={h[-1]['xk']:.4f})")
+    except:
+        print(f"x0 = {x_inicial} estourou/falhou por divergencia")
+
+
+# Caso (c): f(x) = x^3 - 9x + 3, x0 = sqrt(3)
+def fc(x):
+    return x**3 - 9*x + 3
+
+def dfc(x):
+    return 3*x**2 - 9
+
+print("\nCASO (c): x0 = sqrt(3)")
+try:
+    res_c, hist_c = newton(fc, dfc, x0=math.sqrt(3), max_iter=5)
+    print("Executou com sucesso, ultimo xk:", res_c)
+except Exception as e:
+    print(f"Ocorreu excecao esperada (derivada zero): {type(e).__name__}")
