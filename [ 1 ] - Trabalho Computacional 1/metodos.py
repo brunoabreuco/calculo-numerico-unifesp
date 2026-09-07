@@ -133,3 +133,126 @@ def secante(f, x0, x1, eps=1e-8, max_iter=200):
 
     # Se max_iter for atingido, retorna a raiz aproximada e o histórico de iterações
     return xk, historic
+
+
+# =====================================================================================================
+# Funções Auxiliares
+
+# Função auxiliar de sinal: verifica se houve mudança de sinal entre dois pontos consecutivos.
+def sinal(atual, anterior):
+    # Se o produto for menor ou igual a zero, há travessia de eixo ou raiz exata.
+    if(atual*anterior<=0):
+        return True # Retorna verdadeiro indicando que achou uma raiz (ou raiz exata) no subintervalo
+        
+    else:
+        return False # Retorna falso indicando que não há travessia garantida ali
+
+
+# Função de varredura: divide o intervalo [a, b] em 'n' pontos para encontrar subintervalos com raízes.
+def tabelar_sinais(f_alvo, a, b, n):
+    tamanhoPasso = abs(b - a) / (n - 1) # Calcula a distância uniforme entre os pontos da malha
+    
+    # Avalia a função no limite inferior do intervalo global
+    anterior = f_alvo(a)
+
+    # Guarda a coordenada x do limite inferior
+    cordXanterior = a 
+
+    # Calcula a coordenada x do próximo ponto da malha
+    cordXatual = tamanhoPasso + a
+    
+     # Inicializa a lista vazia que vai armazenar as tuplas (a, b) dos subintervalos com raiz
+    lista = []
+    
+    # Percorre todos os subintervalos (total de n-1 passos)
+    for i in range(n - 1): 
+         # Avalia a função no extremo direito do subintervalo atual
+        atual = f_alvo(cordXatual)
+        
+        # Usa a função auxiliar para checar mudança de sinal (f(a)*f(b) <= 0)
+        if sinal(atual, anterior): 
+            # Se mudou o sinal, salva esse subintervalo na lista de retorno
+            lista.append((cordXanterior, cordXatual)) 
+
+        # Atualiza o 'f(a)' do próximo passo para ser o 'f(b)' do passo atual (evita recálculos)    
+        anterior = atual
+        
+        # Avança a coordenada direita da malha
+        cordXatual += tamanhoPasso 
+
+        # Avança a coordenada esquerda da malha
+        cordXanterior += tamanhoPasso 
+
+    # Retorna a lista completa com todos os subintervalos que contêm raízes    
+    return lista
+
+
+# Método de Newton modificado para raízes múltiplas
+def newton_modificado(f, df, x0, m, eps=1e-8, max_iter=200):
+    # Define o chute inicial
+    xk = x0 
+    
+    # Inicializa o histórico vazio para rastrear a convergência
+    historic = [] 
+    
+    # Roda o limite de iterações para evitar laços infinitos
+    for k in range(1, max_iter+1): 
+        # Avalia a derivada no ponto atual
+        dfxk = df(xk) 
+        
+        # Proteção contra divisão por zero (reta tangente horizontal)
+        if dfxk == 0: 
+            raise ValueError
+            
+        # Fórmula do Newton Modificado: multiplicando o passo tradicional pela multiplicidade 'm' da raiz
+        xk_next = xk - m * f(xk)/dfxk 
+        
+        # Calcula o erro de passo (distância absoluta entre xk e x_k+1)
+        error = abs(xk_next - xk) 
+        
+        # Salva os dados desta iteração
+        historic.append({"k": k, "xk": xk_next, "error": error}) 
+        
+        # Critério de parada: se erro de passo ou resíduo for menor que a tolerância, o método convergiu
+        if error < eps or abs(f(xk_next)) < eps: 
+            # Retorna a raiz encontrada e toda a jornada do histórico
+            return xk_next, historic 
+            
+        # Prepara xk para a próxima iteração, caso não tenha convergido
+        xk = xk_next 
+        
+    # Retorna a última tentativa mesmo se estourar o limite de iterações
+    return xk, historic
+
+# Modificação da função de bissecção para remover o critério do resíduo (|f(x)| < eps)
+# Garantindo que ela só vai parar quando o tamanho do passo (|x_k+1 - x_k| < eps) for atingido
+def bisseccao_apenas_passo(f, a, b, eps=1e-8, max_iter=200):
+    if f(a) * f(b) >= 0:
+        raise ValueError
+        
+    xk = a 
+    historic = []
+    
+    for k in range(1, max_iter+1):
+        # Ponto médio do intervalo
+        xk_next = (a+b)/2 
+        
+        # Tamanho do passo (metade do intervalo atual)
+        error = abs(xk_next - xk) 
+        
+        fxk_next = f(xk_next)
+        historic.append({"k": k, "xk": xk_next, "error": error})
+        
+        # Critério de parada ÚNICO: apenas erro no eixo x (tamanho do intervalo)
+        if error < eps: 
+            return xk_next, historic
+            
+        # Atualização normal dos limites [a, b] da bissecção
+        elif f(a) * fxk_next < 0:
+            b = xk_next
+        else:
+            a = xk_next
+            
+        xk = xk_next 
+        
+    return xk, historic
