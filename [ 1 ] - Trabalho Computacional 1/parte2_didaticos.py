@@ -1,72 +1,60 @@
-#-------------------------
-# exercicio 1
-#-------------------------
-print("Exercicio 1 - Isolamento")
+import math
+from metodos import *
 
-# Função-teste oficial do trabalho computacional.
+print("\n" + "="*60)
+print(" PARTE 2 — EXERCÍCIOS DIDÁTICOS")
+print("="*60)
+
+# =====================================================================================================
+# Função-teste padrão desta parte do trabalho computacional.
 def f(x):
     return x**3 - 9*x + 3
 
-# Função auxiliar com raízes conhecidas próxima a 1 e 3.
+"""
+Exercício 2.1 - Isolamento
+"""
+# Obs: A função tabelar_sinais() pedida neste exercício foi implementada 
+# no arquivo metodos.py por se tratar de um algoritmo numérico reutilizável.
+
+print("\n[2.1] Isolamento")
+print("-" * 30)
+
+# =====================================================================================================
+# Letra A: Função f(x) = x^3 - 9x + 3
+print("\n>> Letra (a): Função f(x) = x^3 - 9x + 3 no intervalo [-5, 5]")
+
+print(f"{'n=21':<6} -> {tabelar_sinais(f, -5, 5, 21)}")
+print(f"{'n=11':<6} -> {tabelar_sinais(f, -5, 5, 11)}")
+print(f"{'n=6':<6}  -> {tabelar_sinais(f, -5, 5, 6)}")
+print(f"{'n=4':<6}  -> {tabelar_sinais(f, -5, 5, 4)}")
+
+
+# =====================================================================================================
+# Letra B: Função f(x) = (x-1.05)(x-1.15)(x-3)
+print("\n>> Letra (b): Função f(x) = (x-1.05)(x-1.15)(x-3) no intervalo [0, 4]")
+
 def fb(x):
     return (x-1.05)*(x-1.15)*(x-3)
 
-# Função auxiliar de sinal: verifica se houve mudança de sinal entre dois pontos consecutivos.
-def sinal(atual, anterior):
-    # Se o produto for menor ou igual a zero, há travessia de eixo ou raiz exata.
-    if(atual*anterior<=0):
-        return True
-    else:
-        return False
+print(f"{'n=9':<6}   -> {tabelar_sinais(fb, 0, 4, 9)}")
+print(f"{'n=17':<6}  -> {tabelar_sinais(fb, 0, 4, 17)}")
+print(f"{'n=41':<6}  -> {tabelar_sinais(fb, 0, 4, 41)}")
+print(f"{'n=401':<6} -> {tabelar_sinais(fb, 0, 4, 401)}")
 
-# Função de varredura (tabelamento de sinais): divide o intervalo [a, b] em 'n' pontos 
-# para testar todos os subintervalos e encontrar quais deles contêm raízes.
-def tabelar_sinais (f, a, b , n):
-    # Cálculo do tamanho de cada passo da malha discreta.
-    tamanhoPasso=abs(b-a)/(n-1)
-    
-    # Avaliação da função no extremo esquerdo inicial do intervalo.
-    anterior=f(a)
-    cordXanterior=a
-    cordXatual = tamanhoPasso + a
-    lista = []
-    
-    # Laço para percorrer todos os subintervalos gerados pela malha.
-    for i in range(n-1):
-        atual=f(cordXatual)
-        
-        # Verifica se o subintervalo contém uma raiz através da mudança de sinal.
-        if(sinal(atual, anterior)):
-            lista.append((cordXanterior,cordXatual))
-            
-        # Atualiza os valores e avança as coordenadas para o próximo passo.
-        anterior=atual
-        cordXatual+=tamanhoPasso
-        cordXanterior+=tamanhoPasso
-        
-    print(lista)
+"""
+Análise:
+As raízes de fb(x) são 1.05, 1.15 e 3.0.
+Note que para n=9 e n=17, o método não encontrou as duas primeiras raízes (próximas de 1).
+Isso ocorre porque o passo da malha era grande demais, fazendo a função passar por duas raízes muito próximas dentro do mesmo subintervalo, sem que o sinal nas pontas mudasse.
+Apenas quando aumentamos os pontos para n=41 ou mais, o tamanho do passo ficou suficientemente pequeno 
+para capturar a mudança de sinal individual de cada raiz!
+"""
 
-print("\n funcao: x3-9x+3")
-tabelar_sinais(f, -5, 5, 21)
-tabelar_sinais(f, -5, 5, 11)
-tabelar_sinais(f, -5, 5, 6)
-tabelar_sinais(f, -5, 5, 4)
-
-print("\n funcao: (x-1.05)(x-1.15)(x-3)")
-tabelar_sinais(fb, 0, 4, 9)
-tabelar_sinais(fb, 0, 4, 17)
-tabelar_sinais(fb, 0, 4, 41)
-tabelar_sinais(fb, 0, 4, 401)
-
-
-#-------------------------
-# exercicio 2
-#-------------------------
-print("\n\n")
-print("Exercicio 2 - Previsao x realidade na bisseccao")
-
-import math
-from metodos import bisseccao, newton, secante
+"""
+Exercício 2.2 - Previsão x Realidade na Bissecção
+"""
+print("\n[2.2] Previsão x Realidade na Bissecção")
+print("-" * 45)
 
 # Lista de tolerâncias exigidas para a análise de desempenho.
 epsilons = [10**-2, 10**-4, 10**-6, 10**-8, 10**-10]
@@ -89,14 +77,19 @@ for epsilon in epsilons:
     
     print(f"{epsilon:<13} | {k_teorico:<20} | {k_efetivo}")
 
+"""
+Análise:
+O número de iterações teóricas (k previsto pela fórmula da bissecção) é exatemente igual ao número efetivo de iterações executadas pelo algoritmo.
+Isso ocorre porque o método da bissecção reduz o tamanho do intervalo de busca estritamente pela metade a cada passo, de forma perfeitamente determinística, independentemente do "formato" da curva de f(x). 
+Diferente dos métodos de Newton e Secante (que dependem das inclinações da função), a convergência da bissecção depende apenas do tamanho inicial do intervalo e da tolerância eps exigida!
+"""
 
-#-------------------------
-# exercicio 3
-#-------------------------
-print("\n\n")
-print("Exercicio 3 - Custo real: avaliacao de funcao")
+"""
+Exercício 2.3 - Custo Real: Avaliação de Função
+"""
 
-from metodos import bisseccao, newton, secante
+print("\n[2.3] Custo Real: Avaliações de Função")
+print("-" * 45)
 
 # Derivada analítica f'(x) necessária para o Método de Newton.
 def df(x):
@@ -126,15 +119,18 @@ print("-" * 62)
 for linha in tabela_ex3:
     print(f"{linha[0]:<12} | {linha[1]:<10} | {linha[2]:<16} | {linha[3]}")
 
+"""
+Análise:
+Embora o Método de Newton exija o menor número de iterações (apenas 3), cada passo dele custa caro computacionalmente, pois exige avaliar tanto f(x) quanto f'(x). 
+O Método da Secante tem um pouco mais de iterações (5), mas como não precisa calcular a derivada, o custo total de avaliações de função é idêntico ao de Newton (6 avaliações de f no total).
+Já a Bissecção se mostra extremamente ineficiente nesse aspecto, demandando 27 avaliações de f para atingir a mesma tolerância.
+"""
 
-#-------------------------
-# exercicio 4
-#-------------------------
-print("\n\n")
-print("Exercicio 4 - Ordem empirica de convergencia")
-
-import math
-from metodos import newton, secante
+"""
+Exercício 4 - Ordem Empírica de Convergência
+"""
+print("\n[2.4] Ordem Empírica de Convergência")
+print("-" * 45)
 
 # Raiz exata fornecida para referência de cálculo do erro.
 xi = 0.3376089559658377
@@ -182,15 +178,17 @@ print("-" * 35)
 for it, pk in ordens_secante:
     print(f"{it:<15} | {pk:.4f}")
 
+"""
+Análise:
+Para o Método de Newton, a ordem empírica calculada na 3ª iteração é de 1.9988, próxima do valor teórico p=2.
+Para o Método da Secante, a ordem varia um pouco nas primeiras iterações devido às aproximações iniciais, mas converge em direção à proporção áurea p ≈ 1.618, atingindo 1.7361 na 5ª iteração.
+"""
 
-#-------------------------
-# exercicio 5
-#-------------------------
-print("\n\n")
-print("Exercicio 5 - Os modos de falha de Newton")
-
-import math
-from metodos import newton
+"""
+Exercício 2.5 - Os Modos de Falha de Newton
+"""
+print("\n[2.5] Os Modos de Falha de Newton")
+print("-" * 40)
 
 # Caso (a): Estudo de oscilação / ciclos infinitos.
 # Define uma função onde o método de Newton entra em loop cíclico sem convergir,
@@ -203,9 +201,10 @@ def dfa(x):
 
 _, hist_a = newton(fa, dfa, x0=0, max_iter=10)
 
-print("\nCASO (a)")
+print("\n>> Caso (a): Oscilação")
 print(f"{'k':<5} | {'xk':<15}")
 print("-" * 25)
+
 for item in hist_a:
     print(f"{item['k']:<5} | {item['xk']:.6f}")
 
@@ -217,30 +216,37 @@ def fb_caso(x):
 def dfb_caso(x):
     return 1 / (1 + x**2)
 
-print("\nCASO (b): x0 = 2.0")
+print("\n>> Caso (b): Divergência (x0 = 2.0)")
 try:
     # Testa chute inicial distante (além do raio de convergência segura), gerando estouro numérico.
     _, hist_b2 = newton(fb_caso, dfb_caso, x0=2.0, max_iter=10)
+
     for item in hist_b2[:5]:
         print(f"k={item['k']}, xk={item['xk']:.4f}")
+
 except Exception as e:
     print(f"Divergiu/Estourou com OverflowError: {e}")
 
-print("\nCASO (b): x0 = 1.0")
+print("\n>> Caso (b): Convergência (x0 = 1.0)")
+
 try:
     # Testa chute próximo à raiz, demonstrando convergência bem-sucedida.
     _, hist_b1 = newton(fb_caso, dfb_caso, x0=1.0, max_iter=10)
+
     for item in hist_b1[:5]:
         print(f"k={item['k']}, xk={item['xk']:.4f}")
+
 except Exception as e:
     print(f"Erro: {e}")
 
-print("\nCASO (b): Investigando limite de x0")
+print("\n>> Caso (b): Investigando Limite de x0")
+
 # Realiza uma varredura ao redor da fronteira crítica para mapear o limiar de estabilidade.
 for x_inicial in [1.39, 1.391, 1.40]:
     try:
         _, h = newton(fb_caso, dfb_caso, x0=x_inicial, max_iter=15)
         print(f"x0 = {x_inicial} convergiu em {len(h)} iteracoes (ultimo xk={h[-1]['xk']:.4f})")
+
     except:
         print(f"x0 = {x_inicial} estourou/falhou por divergencia")
 
@@ -254,9 +260,131 @@ def fc(x):
 def dfc(x):
     return 3*x**2 - 9
 
-print("\nCASO (c): x0 = sqrt(3)")
+print("\n>> Caso (c): Derivada Nula (x0 = sqrt(3))")
 try:
     res_c, hist_c = newton(fc, dfc, x0=math.sqrt(3), max_iter=5)
     print("Executou com sucesso, ultimo xk:", res_c)
 except Exception as e:
     print(f"Ocorreu excecao esperada (derivada zero): {type(e).__name__}")
+
+"""
+Análise:
+Caso (a): Oscilação - A tangente envia x_k de volta para o ponto anterior, prendendo o método em um ciclo infinito (0 -> 1 -> 0 -> 1).
+Caso (b): Divergência - A função arctan(x) possui um raio de convergência restrito. Chutes dentro do limite (x0=1.0) convergem. Chutes fora (x0=2.0) lançam o próximo x_k para muito longe, divergindo para o infinito. Nossos testes empíricos limitaram essa fronteira entre 1.39 e 1.40.
+Caso (c): Derivada Nula - Se f'(x0) = 0, a reta tangente é perfeitamente horizontal e nunca cruza o eixo x, causando uma divisão por zero matemática que quebra o algoritmo.
+"""
+
+"""
+Exercício 2.6 - Raiz múltipla
+"""
+print("\n[2.6] Raiz Múltipla")
+print("-" * 40)
+
+# Função com raiz múltipla (m=2) no ponto x=2
+def f_multipla(x):
+    return (x - 2)**2 * (x + 1)
+
+# Derivada analítica da função acima: f'(x) = 3x^2 - 6x
+def df_multipla(x):
+    return 3*x**2 - 6*x
+
+print(">> Newton Tradicional (x0 = 3)")
+
+# Executa Newton padrão a partir de x0=3 por 10 iterações fixas. Usando _ para ignorar a raiz final retornada, já que o que queremos aqui é o histórico.
+_, hist_mult = newton(f_multipla, df_multipla, x0=3, max_iter=10)
+
+print(f"{'k':<5} | {'Erro ek':<15} | {'ek+1 / ek'}")
+print("-" * 40)
+
+# Extrai o erro absoluto ek = |x_k - 2.0| para todas as iterações
+erros = [abs(item["xk"] - 2.0) for item in hist_mult]
+
+# Itera sobre o histórico para calcular e imprimir a razão e_{k+1}/e_k
+for i in range(len(hist_mult)):
+    ek = erros[i] # Erro na iteração atual
+
+    if i < len(hist_mult) - 1:
+        ek_plus_1 = erros[i+1] # Erro na próxima iteração
+        razao = ek_plus_1 / ek if ek != 0 else 0 # Razão de decaimento do erro
+        
+        print(f"{hist_mult[i]['k']:<5} | {ek:.8e}  | {razao:.4f}")
+
+    else:
+        # A última iteração não possui um e_{k+1} para calcular a razão
+        print(f"{hist_mult[i]['k']:<5} | {ek:.8e}  | -")
+
+# Obs: A função de Newton Modificado pedida neste exercício foi implementada no arquivo metodos.py 
+# sob o nome 'newton_modificado', para manter todos os métodos no mesmo local.
+
+print("\n>> Newton Modificado (m = 2, x0 = 3)")
+
+# Novamente descartamos a raiz em '_' para focar no histórico do erro
+_, hist_mod = newton_modificado(f_multipla, df_multipla, x0=3, m=2, max_iter=10)
+
+print(f"{'k':<5} | {'Erro ek':<15}")
+print("-" * 25)
+
+for item in hist_mod:
+    ek = abs(item["xk"] - 2.0)
+    print(f"{item['k']:<5} | {ek:.8e}")
+
+"""
+Análise:
+No Newton tradicional, a convergência para raízes múltiplas (em x=2, multiplicidade m=2) cai de quadrática para linear. Isso é evidenciado pela razão e_{k+1}/e_k, que se aproxima assintoticamente de (m-1)/m = 0.5.
+Porém, ao usar o Newton modificado multiplicando o passo pela multiplicidade 'm', a convergência quadrática é completamente restaurada e o erro desaba quase a zero logo nas primeiras iterações.
+"""
+
+
+"""
+Exercício 2.7 - A armadilha do resíduo
+"""
+print("\n[2.7] A armadilha do resíduo")
+print("-" * 40)
+
+def f_res(x):
+    return (x - 1)**10
+
+print(">> f(1.1) e f(1.3)")
+print(f"f(1.1) = {f_res(1.1):.4e}")
+print(f"f(1.3) = {f_res(1.3):.4e}")
+
+# Nossa bisseccao oficial possui o criterio: error < eps OR abs(f(xk_next)) < eps
+# Como f(x) = (x-1)^10 é sempre positiva, f(a)*f(b) > 0, o que aciona nossa validação de segurança e levanta ValueError.
+# Vamos encapsular em um bloco try-except para demonstrar formalmente na saída do programa
+# que o método é matematicamente incapaz de iniciar neste cenário, para responder a questão.
+
+print(">> Bissecção com parada padrão (|Passo| < eps OU |f(x)| < eps):")
+try:
+    _, hist_res_padrao = bisseccao(f_res, 0, 1.5, eps=1e-8)
+    
+    # Extrai a última raiz aproximada
+    raiz_padrao = hist_res_padrao[-1]['xk']
+    
+    print(f"Raiz obtida: {raiz_padrao:.8f}")
+
+except ValueError:
+    print("A bissecção oficial bloqueou a execução (ValueError) porque f(a)*f(b) >= 0.")
+
+# Tenta rodar a bissecção modificada (que também respeita a trava de segurança)
+try:
+    _, hist_res_passo = bisseccao_apenas_passo(f_res, 0, 1.5, eps=1e-8)
+    
+    # Extrai a última raiz aproximada
+    raiz_passo = hist_res_passo[-1]['xk']
+    
+    # Calcula o erro em relação à raiz verdadeira x=1
+    erro_passo = abs(raiz_passo - 1.0) 
+    
+    print("\n>> Bissecção com parada EXCLUSIVA de passo (|Passo| < eps):")
+    print(f"Raiz obtida: {raiz_passo:.8f}")
+    print(f"Erro real em x: {erro_passo:.8e}")
+except ValueError:
+    print("A bissecção modificada também foi bloqueada pela trava de sinal.")
+
+"""
+Análise:
+Como f(x) = (x-1)^10 tem multiplicidade par, a função não cruza o eixo x (não há mudança de sinal).
+Isso faz com que nossa Bissecção oficial trave imediatamente com ValueError, conforme a exigência do PDF.
+Se a trava de segurança fosse desligada, o critério do resíduo seria extremamente perigoso: a função é tão "achatada" contra o eixo x que ela atinge a tolerância vertical |f(x)| < eps muito longe da raiz real, encerrando o algoritmo prematuramente com uma raiz falsa.
+Esse critério só é adequado quando o usuário realmente se importa estritamente em zerar o processo físico que a função representa, sem se importar se a variável x em si está precisa.
+"""
