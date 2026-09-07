@@ -18,7 +18,12 @@ def kepler(e,   M, E0=None):
 # -----------------------------------------------------------------------------------------------------
 # E.1 Para a órbita do cometa Halley, e = 0,967. Calcule E para M = 0,2 rad.
 
-print("E.1 -----------------------")
+print("\n" + "="*60)
+print(" PROBLEMA E — EQUAÇÃO DE KEPLER")
+print("="*60)
+
+print("\n[E.1] Órbita do Cometa Halley")
+print("-" * 30)
 
 print("Fase I (Tabelamento para isolamento da raiz):")
 f_E = lambda E: E - 0.967*math.sin(E) - 0.2
@@ -50,10 +55,11 @@ Método convergiu em 6 iterações.
 # -----------------------------------------------------------------------------------------------------
 # E.2 Resolva para os três casos descritos (i, ii, iii), usando Newton com chute inicial E0 = M:
 
-print("E.2 -----------------------")
+print("\n[E.2] Robustez (Newton com E0 = M)")
+print("-" * 35)
 
 # Caso (i)
-print("Caso (i) ------------")
+print("\n>> Caso (i): e = 0.10 | M = 0.5")
 
 # 1. Desempacota o resultado
 root, history = kepler(0.10, 0.5)
@@ -67,7 +73,7 @@ print(f"Método convergiu em {len(history)} iterações.")
 
 
 # Caso (ii)
-print("Caso (ii) ------------")
+print("\n>> Caso (ii): e = 0.90 | M = 0.1")
 
 # 1. Desempacota o resultado
 root, history = kepler(0.90, 0.1)
@@ -81,7 +87,7 @@ print(f"Método convergiu em {len(history)} iterações.")
 
 
 # Caso (iii)
-print("Caso (iii) ------------")
+print("\n>> Caso (iii): e = 0.99 | M = 0.01")
 
 # 1. Desempacota o resultado
 root, history = kepler(0.99, 0.01)
@@ -116,7 +122,8 @@ O esforço aumenta à medida que a excentricidade e se aproxima de 1. O motivo d
 # -----------------------------------------------------------------------------------------------------
 # E.3 Um chute inicial melhor para órbitas muito excêntricas é E0 = M + e sin M. Refaça o caso (iii) com ele e compare.
 
-print("E.3 -----------------------")
+print("\n[E.3] Chute Inicial Melhorado para Órbitas Excêntricas")
+print("-" * 55)
 
 # 1. Desempacota o resultado
 root, history = kepler(0.99, 0.01, 0.01 + 0.99*math.sin(0.01))
@@ -143,7 +150,8 @@ Embora o chute E0 = M + e*sin(M) seja teoricamente mais próximo da raiz verdade
 # -----------------------------------------------------------------------------------------------------
 # E.4 Para o caso (iii), rode também a bissecção em [0; π]. Ela converge? Em quantas iterações? Qual método você recomendaria para um software de rastreamento de satélites que precisa resolver essa equação milhões de vezes por segundo, e por quê?
 
-print("E.4 -----------------------")
+print("\n[E.4] Comparação com a Bissecção")
+print("-" * 35)
 
 # 1. Desempacota o resultado
 root, history = metodos.bisseccao(lambda E: E - 0.99*math.sin(E) - 0.01, 0, math.pi)
@@ -164,4 +172,95 @@ Método da Bissecção convergiu em 22 iterações.
 
 Análise:
 A função converge e encontra a mesma raiz nos outros casos, mas exige bem mais iterações para isso, 22 nesse caso. Para um software que precisa resolver essa equação milhões de vezes por segundo, recomendaria o método de Newton com um chute inicial inteligente. A vantagem é a velocidade (22 iterações contra 7), apesar da fragilidade do método em casos extremos.
+"""
+
+"""
+Problema F - Deflexão de Viga
+"""
+
+print("\n" + "="*60)
+print(" PROBLEMA F — DEFLEXÃO DE VIGA (BÔNUS)")
+print("="*60)
+
+# Constantes da viga
+L = 600
+E_mod = 50000
+I = 30000
+w0 = 2.5
+C = w0 / (120 * L * E_mod * I)
+
+# Função de deflexão y(x)
+def y_x(x):
+    return C * (-(x**5) + 2*(L**2)*(x**3) - (L**4)*x)
+
+# Derivada analítica dy/dx
+def dy_dx(x):
+    return C * (-5*(x**4) + 6*(L**2)*(x**2) - L**4)
+
+# -----------------------------------------------------------------------------------------------------
+# F.1 O ponto de deflexão máxima é onde dy/dx = 0. Derive analiticamente e encontre esse ponto.
+
+print("\n[F.1] Ponto de Deflexão Máxima")
+print("-" * 30)
+
+# Usando a bissecção no intervalo [0, 300] (metade da viga)
+root_F1, hist_F1 = metodos.bisseccao(dy_dx, 0, 300)
+print(f"Ponto de deflexão máxima (x) = {root_F1:.4f} cm")
+print(f"Método convergiu em {len(hist_F1)} iterações.")
+
+# -----------------------------------------------------------------------------------------------------
+# F.2 Calcule a deflexão máxima em cm.
+
+print("\n[F.2] Deflexão Máxima")
+print("-" * 30)
+
+max_deflection = y_x(root_F1)
+print(f"Deflexão máxima y(x) = {max_deflection:.4f} cm")
+
+# -----------------------------------------------------------------------------------------------------
+# F.3 Armadilha proposital. Avalie dy/dx em x = 0 e em x = L.
+
+print("\n[F.3] Armadilha Proposital")
+print("-" * 30)
+
+print(f"dy/dx em x=0: {dy_dx(0):.4e}")
+print(f"dy/dx em x=L: {dy_dx(L):.4f}")
+
+"""
+Análise:
+Avaliando a derivada, observamos que dy/dx em x=L é exatamente ZERO (além da raiz verdadeira que procuramos).
+Se tentarmos aplicar a bissecção no intervalo [0, L], teremos f(0) * f(L) = (negativo) * (0) = 0.
+A nossa implementação da bissecção (como exigido no PDF) levanta um ValueError se f(a)*f(b) >= 0.
+Ou seja, o programa quebra e levanta um ERRO. A correção é não usar a viga inteira, mas sim um intervalo que isolem apenas a raiz verdadeira, como [0, 300] (metade da viga).
+"""
+
+# -----------------------------------------------------------------------------------------------------
+# F.4 Refaça F.1 usando uma derivada numérica em vez de analítica
+
+print("\n[F.4] Derivada Numérica vs Analítica")
+print("-" * 40)
+
+# Raiz exata analítica: x = L / sqrt(5)
+x_exact = L / math.sqrt(5)
+
+h_values = [1e-2, 1e-4, 1e-6, 1e-8, 1e-10]
+errors = []
+
+for h in h_values:
+    # Derivada numérica
+    def dy_dx_num(x):
+        return (y_x(x + h) - y_x(x - h)) / (2 * h)
+    
+    # Acha a raiz usando a derivada numérica
+    root_num, _ = metodos.bisseccao(dy_dx_num, 0, 300)
+    
+    # Calcula o erro em relação à raiz exata
+    error = abs(root_num - x_exact)
+    errors.append(error)
+    print(f"h = {h:.0e} | x_encontrado = {root_num:.6f} | erro = {error:.2e}")
+
+"""
+Análise:
+À medida que h fica muito pequeno (como 10^-10), o computador precisa subtrair dois números quase idênticos no numerador da derivada numérica (y(x+h) - y(x-h)).
+Isso causa um fenômeno do Cálculo Numérico chamado "Cancelamento Catastrófico", onde a precisão de ponto flutuante do computador é perdida, aumentando o erro ao invés de diminuí-lo.
 """
