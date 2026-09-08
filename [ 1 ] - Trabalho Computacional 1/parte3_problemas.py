@@ -612,7 +612,7 @@ print(" PROBLEMA E — EQUAÇÃO DE KEPLER")
 print("="*60)
 
 # Função encapsulada para resolver a Equação de Kepler
-def kepler(e, M, E0=None):
+def kepler(e, M, E0=None, eps=1e-8):
     # Se não houver chute inicial fornecido, usa a aproximação de que E0 = M (válido para excentricidades pequenas)
     if E0 is None:
         E0 = M
@@ -622,8 +622,8 @@ def kepler(e, M, E0=None):
     # f'(E) = 1 - e*cos(E)
     df_E = lambda E: 1 - e * math.cos(E)
     
-    # Chama o método de Newton com tolerância padrão (10^-6)
-    return newton(f_E, df_E, E0, eps=1e-6)
+    # Chama o método de Newton com tolerância padrão (10^-8)
+    return newton(f_E, df_E, E0, eps=eps)
 
 print("\n[E.1] Órbita do Cometa Halley")
 print("-" * 30)
@@ -647,13 +647,6 @@ print(f"Prova real: M calculado = {M_calc:.4f} (esperado: 0.2000)")
 # 4. Informa o número de iterações.
 print(f"Método convergiu em {len(history)} iterações.")
 
-"""
-Saída:
-
-E.1 -----------------------
-Anomalia excêntrica (E) = 1.028022 rad
-Método convergiu em 6 iterações.
-"""
 
 # -----------------------------------------------------------------------------------------------------
 # E.2 Resolva para os três casos descritos (i, ii, iii), usando Newton com chute inicial E0 = M:
@@ -703,21 +696,6 @@ print(f"Anomalia excêntrica (E) = {root:.6f} rad")
 print(f"Método convergiu em {len(history)} iterações.")
 
 """
-Saída:
-
-E.2 -----------------------
-Caso (i) ------------
-Anomalia excêntrica (E) = 0.552480 rad
-Método convergiu em 2 iterações.
-
-Caso (ii) ------------
-Anomalia excêntrica (E) = 0.630844 rad
-Método convergiu em 5 iterações.
-
-Caso (iii) ------------
-Anomalia excêntrica (E) = 0.342270 rad
-Método convergiu em 7 iterações.
-
 Análise:
 O esforço aumenta à medida que a excentricidade e se aproxima de 1. O motivo disso é que, como o chute inicial é próximo de zero (E ≈ 0) e o termo cos(E) se aproxima de 1, a derivada f'(E) = 1 - e*cos(E) se aproxima de zero. Isso faz com que o método de Newton (que divide por f'(E)) sofra com instabilidade inicial, dando passos exagerados que exigem mais iterações para corrigir.
 """
@@ -739,12 +717,6 @@ print(f"Anomalia excêntrica (E) = {root:.6f} rad")
 print(f"Método convergiu em {len(history)} iterações.")
 
 """
-Saída:
-
-E.3 -----------------------
-Anomalia excêntrica (E) = 0.342270 rad
-Método convergiu em 7 iterações.
-
 Análise:
 O novo chute inicial não melhorou o esforço computacional, já que o número de iterações foi o mesmo.
 Embora o chute E0 = M + e*sin(M) seja teoricamente mais próximo da raiz verdadeira, neste caso extremo (e=0.99, M=0.01) ele não foi suficiente para reduzir o número de iterações. Isso ocorre porque o novo chute inicial ainda está na região crítica próxima a zero, onde a derivada é muito pequena. Logo, o método de Newton sofre do mesmo problema de instabilidade no primeiro passo em ambos os casos.
@@ -757,22 +729,20 @@ print("\n[E.4] Comparação com a Bissecção")
 print("-" * 35)
 
 # 1. Desempacota o resultado
-root, history = bisseccao(lambda E: E - 0.99*math.sin(E) - 0.01, 0, math.pi)
+root, history = bisseccao(lambda E: E - 0.99*math.sin(E) - 0.01, 0, math.pi, eps=1e-8)
 
 # 2. Imprime a resposta com 6 casas decimais.
 print(f"Anomalia excêntrica (E) = {root:.6f} rad")
 
 # 3. Informa o número de iterações.
-# O número de iterações é o tamanho da lista 'history'
 print(f"Método da Bissecção convergiu em {len(history)} iterações.")
 
+last_step = history[-1]
+print(f"Erro final (passo): {last_step['erro']:.2e} | |f(x)| final: {abs(last_step['fx']):.2e}")
+if abs(last_step['fx']) < 1e-8 and last_step['erro'] >= 1e-8:
+    print("AVISO: A bissecção parou pelo critério de resíduo (|f(x)| < eps) antes do passo atingir a tolerância nominal. Precisão real do passo: ~7.5e-7.")
+
 """
-Saída:
-
-E.4 -----------------------
-Anomalia excêntrica (E) = 0.342270 rad
-Método da Bissecção convergiu em 22 iterações.
-
 Análise:
 A função converge e encontra a mesma raiz nos outros casos, mas exige bem mais iterações para isso, 22 nesse caso. Para um software que precisa resolver essa equação milhões de vezes por segundo, recomendaria o método de Newton com um chute inicial inteligente. A vantagem é a velocidade (22 iterações contra 7), apesar da fragilidade do método em casos extremos.
 """
@@ -850,17 +820,13 @@ h_values = [1e-2, 1e-4, 1e-6, 1e-8, 1e-10]
 errors = []
 
 for h in h_values:
-    # Derivada numérica
-    def dy_dx_num(x):
-        return (y_x(x + h) - y_x(x - h)) / (2 * h)
+    # Derivada numérica avaliada diretamente na raiz exata
+    deriv_num = (y_x(x_exact + h) - y_x(x_exact - h)) / (2 * h)
     
-    # Acha a raiz usando a derivada numérica
-    root_num, _ = bisseccao(dy_dx_num, 0, 300)
-    
-    # Calcula o erro em relação à raiz exata
-    error = abs(root_num - x_exact)
+    # Calcula o erro em relação à derivada analítica na raiz exata (que é zero, mas fazemos a diferença)
+    error = abs(deriv_num - dy_dx(x_exact))
     errors.append(error)
-    print(f"h = {h:.0e} | x_encontrado = {root_num:.6f} | erro = {error:.2e}")
+    print(f"h = {h:.0e} | dy_dx_num = {deriv_num:.6e} | erro = {error:.2e}")
 
 """
 Análise:
