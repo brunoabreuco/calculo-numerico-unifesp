@@ -813,18 +813,18 @@ Ou seja, o programa quebra e levanta um ERRO. A correção é não usar a viga i
 print("\n[F.4] Derivada Numérica vs Analítica")
 print("-" * 40)
 
-# Raiz exata analítica: x = L / sqrt(5)
-x_exact = L / math.sqrt(5)
+# Ponto de teste genérico da viga (x = 100 cm) para evitar que a terceira derivada anule o erro de truncamento
+x_test = 100.0
 
 h_values = [1e-2, 1e-4, 1e-6, 1e-8, 1e-10]
 errors = []
 
 for h in h_values:
-    # Derivada numérica avaliada diretamente na raiz exata
-    deriv_num = (y_x(x_exact + h) - y_x(x_exact - h)) / (2 * h)
+    # Derivada numérica avaliada diretamente no ponto de teste
+    deriv_num = (y_x(x_test + h) - y_x(x_test - h)) / (2 * h)
     
-    # Calcula o erro em relação à derivada analítica na raiz exata (que é zero, mas fazemos a diferença)
-    error = abs(deriv_num - dy_dx(x_exact))
+    # Calcula o erro absoluto em relação à derivada analítica
+    error = abs(deriv_num - dy_dx(x_test))
     errors.append(error)
     print(f"h = {h:.0e} | dy_dx_num = {deriv_num:.6e} | erro = {error:.2e}")
 
