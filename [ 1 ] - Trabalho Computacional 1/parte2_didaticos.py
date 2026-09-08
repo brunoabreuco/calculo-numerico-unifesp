@@ -96,22 +96,27 @@ def df(x):
     return 3*x**2 - 9
 
 # Executa cada um dos três métodos numéricos para a tolerância padrão de eps = 1e-8,
-# capturando o histórico de execuções para quantificar o esforço computacional (custo).
-hist_biss = bisseccao(f, 0, 1)[1]
-hist_newton = newton(f, df, x0=0.5)[1]
-hist_secante = secante(f, 0, 1)[1]
+# usando o decorator contador para capturar o número exato de chamadas à f e f'
+f_biss = contador(f)
+hist_biss = bisseccao(f_biss, 0, 1)[1]
+
+f_newton = contador(f)
+df_newton = contador(df)
+hist_newton = newton(f_newton, df_newton, x0=0.5)[1]
+
+f_sec = contador(f)
+hist_secante = secante(f_sec, 0, 1)[1]
 
 # Contagem de iterações através do comprimento da lista de histórico de cada método.
 it_biss = len(hist_biss)
 it_newton = len(hist_newton)
 it_secante = len(hist_secante)
 
-# Monta a tabela estruturada avaliando o número de chamadas de f e de derivadas f' 
-# com base na arquitetura interna de cada algoritmo implementado.
+# Monta a tabela estruturada pegando as contagens reais gravadas no atributo .n do decorator
 tabela_ex3 = [
-    ["Bisseccao", it_biss, it_biss, 0],
-    ["Newton", it_newton, it_newton * 2, it_newton],
-    ["Secante", it_secante, it_secante + 1, 0]
+    ["Bisseccao", it_biss, f_biss.n, 0],
+    ["Newton", it_newton, f_newton.n, df_newton.n],
+    ["Secante", it_secante, f_sec.n, 0]
 ]
 
 print(f"{'Metodo':<12} | {'Iteracoes':<10} | {'Avaliacoes de f':<16} | {'Avaliacoes de f\''}")
@@ -144,7 +149,7 @@ _, hist_secante = secante(f, 0, 1)
 # para estimar a velocidade real com que o método converge para a raiz exata.
 def calcular_ordem(hist, xi):
     # Mapeia cada aproximação xk do histórico no seu respectivo erro absoluto.
-    erros = [abs(item["xk"] - xi) for item in hist]
+    erros = [abs(item["x"] - xi) for item in hist]
     ordens = []
     
     # Percorre a partir da terceira posição para garantir a existência de três erros consecutivos.
@@ -202,11 +207,11 @@ def dfa(x):
 _, hist_a = newton(fa, dfa, x0=0, max_iter=10)
 
 print("\n>> Caso (a): Oscilação")
-print(f"{'k':<5} | {'xk':<15}")
+print(f"{'k':<5} | {'x':<15}")
 print("-" * 25)
 
 for item in hist_a:
-    print(f"{item['k']:<5} | {item['xk']:.6f}")
+    print(f"{item['k']:<5} | {item['x']:.6f}")
 
 
 # Caso (b): Estudo de divergência por afastamento utilizando a função arctan(x).
@@ -222,7 +227,7 @@ try:
     _, hist_b2 = newton(fb_caso, dfb_caso, x0=2.0, max_iter=10)
 
     for item in hist_b2[:5]:
-        print(f"k={item['k']}, xk={item['xk']:.4f}")
+        print(f"k={item['k']}, xk={item['x']:.4f}")
 
 except Exception as e:
     print(f"Divergiu/Estourou com OverflowError: {e}")
@@ -234,7 +239,7 @@ try:
     _, hist_b1 = newton(fb_caso, dfb_caso, x0=1.0, max_iter=10)
 
     for item in hist_b1[:5]:
-        print(f"k={item['k']}, xk={item['xk']:.4f}")
+        print(f"k={item['k']}, xk={item['x']:.4f}")
 
 except Exception as e:
     print(f"Erro: {e}")
@@ -245,7 +250,7 @@ print("\n>> Caso (b): Investigando Limite de x0")
 for x_inicial in [1.39, 1.391, 1.40]:
     try:
         _, h = newton(fb_caso, dfb_caso, x0=x_inicial, max_iter=15)
-        print(f"x0 = {x_inicial} convergiu em {len(h)} iteracoes (ultimo xk={h[-1]['xk']:.4f})")
+        print(f"x0 = {x_inicial} convergiu em {len(h)} iteracoes (ultimo xk={h[-1]['x']:.4f})")
 
     except:
         print(f"x0 = {x_inicial} estourou/falhou por divergencia")
@@ -297,7 +302,7 @@ print(f"{'k':<5} | {'Erro ek':<15} | {'ek+1 / ek'}")
 print("-" * 40)
 
 # Extrai o erro absoluto ek = |x_k - 2.0| para todas as iterações
-erros = [abs(item["xk"] - 2.0) for item in hist_mult]
+erros = [abs(item["x"] - 2.0) for item in hist_mult]
 
 # Itera sobre o histórico para calcular e imprimir a razão e_{k+1}/e_k
 for i in range(len(hist_mult)):
@@ -325,7 +330,7 @@ print(f"{'k':<5} | {'Erro ek':<15}")
 print("-" * 25)
 
 for item in hist_mod:
-    ek = abs(item["xk"] - 2.0)
+    ek = abs(item["x"] - 2.0)
     print(f"{item['k']:<5} | {ek:.8e}")
 
 """
@@ -358,7 +363,7 @@ try:
     _, hist_res_padrao = bisseccao(f_res, 0, 1.5, eps=1e-8)
     
     # Extrai a última raiz aproximada
-    raiz_padrao = hist_res_padrao[-1]['xk']
+    raiz_padrao = hist_res_padrao[-1]['x']
     
     print(f"Raiz obtida: {raiz_padrao:.8f}")
 
@@ -370,7 +375,7 @@ try:
     _, hist_res_passo = bisseccao_apenas_passo(f_res, 0, 1.5, eps=1e-8)
     
     # Extrai a última raiz aproximada
-    raiz_passo = hist_res_passo[-1]['xk']
+    raiz_passo = hist_res_passo[-1]['x']
     
     # Calcula o erro em relação à raiz verdadeira x=1
     erro_passo = abs(raiz_passo - 1.0) 

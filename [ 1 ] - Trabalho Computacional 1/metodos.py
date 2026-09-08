@@ -22,7 +22,7 @@ def bisseccao(f, a, b, eps=1e-8, max_iter=200):
         fxk_next = f(xk_next)
 
         # Adiciona a iteração atual ao histórico
-        historic.append({"k": k, "xk": xk_next, "error": error})
+        historic.append({"k": k, "x": xk_next, "fx": fxk_next, "erro": error})
         
         """
         Os critérios definidos neste Trabalho Computacional são:
@@ -83,11 +83,14 @@ def newton(f, df, x0, eps=1e-8, max_iter=200):
         # Cálculo do erro absoluto
         error = abs(xk_next - xk)
 
+        # Cálculo de f(xk_next)
+        fxk_next = f(xk_next)
+
         # Adiciona a iteração atual ao histórico
-        historic.append({"k": k, "xk": xk_next, "error": error})
+        historic.append({"k": k, "x": xk_next, "fx": fxk_next, "erro": error})
 
         # Se o erro absoluto for menor que eps OU o valor absoluto de f(x_k+1) for menor que eps, então xk é uma raiz aproximada.
-        if error < eps or abs(f(xk_next)) < eps: 
+        if error < eps or abs(fxk_next) < eps: 
             return xk_next, historic
         
         # Atualiza o chute inicial do x_k.
@@ -120,11 +123,14 @@ def secante(f, x0, x1, eps=1e-8, max_iter=200):
         # Cálculo do erro absoluto
         error = abs(xk_next - xk)
 
+        # Cálculo de f(xk_next)
+        fxk_next = f(xk_next)
+
         # Adiciona a iteração atual ao histórico
-        historic.append({"k": k, "xk": xk_next, "error": error})
+        historic.append({"k": k, "x": xk_next, "fx": fxk_next, "erro": error})
 
         # Se o erro absoluto for menor que eps OU o valor absoluto de f(x_k+1) for menor que eps, então xk é uma raiz aproximada.
-        if error < eps or abs(f(xk_next)) < eps: 
+        if error < eps or abs(fxk_next) < eps: 
             return xk_next, historic
         
         # Atualiza os chutes iniciais para x_k e x_{k-1}.
@@ -210,11 +216,14 @@ def newton_modificado(f, df, x0, m, eps=1e-8, max_iter=200):
         # Calcula o erro de passo (distância absoluta entre xk e x_k+1)
         error = abs(xk_next - xk) 
         
+        # Cálculo de f(xk_next)
+        fxk_next = f(xk_next)
+        
         # Salva os dados desta iteração
-        historic.append({"k": k, "xk": xk_next, "error": error}) 
+        historic.append({"k": k, "x": xk_next, "fx": fxk_next, "erro": error}) 
         
         # Critério de parada: se erro de passo ou resíduo for menor que a tolerância, o método convergiu
-        if error < eps or abs(f(xk_next)) < eps: 
+        if error < eps or abs(fxk_next) < eps: 
             # Retorna a raiz encontrada e toda a jornada do histórico
             return xk_next, historic 
             
@@ -241,7 +250,7 @@ def bisseccao_apenas_passo(f, a, b, eps=1e-8, max_iter=200):
         error = abs(xk_next - xk) 
         
         fxk_next = f(xk_next)
-        historic.append({"k": k, "xk": xk_next, "error": error})
+        historic.append({"k": k, "x": xk_next, "fx": fxk_next, "erro": error})
         
         # Critério de parada ÚNICO: apenas erro no eixo x (tamanho do intervalo)
         if error < eps: 
@@ -256,3 +265,11 @@ def bisseccao_apenas_passo(f, a, b, eps=1e-8, max_iter=200):
         xk = xk_next 
         
     return xk, historic
+
+# Decorator para contar o número de chamadas de uma função
+def contador(f):
+    def wrapper(x):
+        wrapper.n += 1
+        return f(x)
+    wrapper.n = 0
+    return wrapper
