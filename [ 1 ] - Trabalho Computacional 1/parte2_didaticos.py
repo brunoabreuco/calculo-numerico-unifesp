@@ -1,5 +1,7 @@
 import math
+import pandas as pd
 from metodos import *
+
 
 print("\n" + "="*60)
 print(" PARTE 2 — EXERCÍCIOS DIDÁTICOS")
@@ -59,23 +61,19 @@ print("-" * 45)
 # Lista de tolerâncias exigidas para a análise de desempenho.
 epsilons = [10**-2, 10**-4, 10**-6, 10**-8, 10**-10]
 
-print("Epsilon       | k previsto (formula) | k efetivo (bisseccao)")
-print("-" * 58)
-
+dados_ex2_2 = []
 # Para cada tolerância da lista, calculamos o número teórico de iterações 
 # usando a fórmula matemática baseada em logaritmos, e comparamos com o 
 # número de passos efetivos retornados pelo código real da bisseção.
 for epsilon in epsilons:
-    # Cálculo do teto do número de iterações teóricas.
     k_teorico = math.ceil((math.log(1) - math.log(epsilon)) / math.log(2))
-    
-    # Execução real do algoritmo da bisseção no intervalo [0, 1].
     _, historic = bisseccao(f, 0, 1, eps=epsilon)
-    
-    # O número efetivo corresponde ao tamanho da lista histórica gerada.
     k_efetivo = len(historic)
-    
-    print(f"{epsilon:<13} | {k_teorico:<20} | {k_efetivo}")
+    dados_ex2_2.append({"Epsilon": epsilon, "k previsto (fórmula)": k_teorico, "k efetivo (bissecção)": k_efetivo})
+
+# Gera a tabela pelo pandas e imprime em formato markdown no terminal
+df_ex2_2 = pd.DataFrame(dados_ex2_2)
+print(df_ex2_2.to_markdown(index=False))
 
 """
 Análise:
@@ -96,28 +94,32 @@ def df(x):
     return 3*x**2 - 9
 
 # Executa cada um dos três métodos numéricos para a tolerância padrão de eps = 1e-8,
-# capturando o histórico de execuções para quantificar o esforço computacional (custo).
-hist_biss = bisseccao(f, 0, 1)[1]
-hist_newton = newton(f, df, x0=0.5)[1]
-hist_secante = secante(f, 0, 1)[1]
+# usando o decorator contador para capturar o número exato de chamadas à f e f'
+f_biss = contador(f)
+hist_biss = bisseccao(f_biss, 0, 1)[1]
+
+f_newton = contador(f)
+df_newton = contador(df)
+hist_newton = newton(f_newton, df_newton, x0=0.5)[1]
+
+f_sec = contador(f)
+hist_secante = secante(f_sec, 0, 1)[1]
 
 # Contagem de iterações através do comprimento da lista de histórico de cada método.
 it_biss = len(hist_biss)
 it_newton = len(hist_newton)
 it_secante = len(hist_secante)
 
-# Monta a tabela estruturada avaliando o número de chamadas de f e de derivadas f' 
-# com base na arquitetura interna de cada algoritmo implementado.
+# Monta a tabela estruturada pegando as contagens reais gravadas no atributo .n do decorator
 tabela_ex3 = [
-    ["Bisseccao", it_biss, it_biss, 0],
-    ["Newton", it_newton, it_newton * 2, it_newton],
-    ["Secante", it_secante, it_secante + 1, 0]
+    ["Bisseccao", it_biss, f_biss.n, 0],
+    ["Newton", it_newton, f_newton.n, df_newton.n],
+    ["Secante", it_secante, f_sec.n, 0]
 ]
 
-print(f"{'Metodo':<12} | {'Iteracoes':<10} | {'Avaliacoes de f':<16} | {'Avaliacoes de f\''}")
-print("-" * 62)
-for linha in tabela_ex3:
-    print(f"{linha[0]:<12} | {linha[1]:<10} | {linha[2]:<16} | {linha[3]}")
+# Gera a tabela pelo pandas e imprime em formato markdown no terminal
+df_ex2_3 = pd.DataFrame(tabela_ex3, columns=["Metodo", "Iteracoes", "Avaliacoes de f", "Avaliacoes de f'"])
+print(df_ex2_3.to_markdown(index=False))
 
 """
 Análise:
@@ -144,7 +146,7 @@ _, hist_secante = secante(f, 0, 1)
 # para estimar a velocidade real com que o método converge para a raiz exata.
 def calcular_ordem(hist, xi):
     # Mapeia cada aproximação xk do histórico no seu respectivo erro absoluto.
-    erros = [abs(item["xk"] - xi) for item in hist]
+    erros = [abs(item["x"] - xi) for item in hist]
     ordens = []
     
     # Percorre a partir da terceira posição para garantir a existência de três erros consecutivos.
@@ -167,16 +169,16 @@ ordens_newton = calcular_ordem(hist_newton, xi)
 ordens_secante = calcular_ordem(hist_secante, xi)
 
 print("METODO DE NEWTON (Teorico: p = 2)")
-print(f"{'Iteracao (k)':<15} | {'p_k empirico':<15}")
-print("-" * 35)
-for it, pk in ordens_newton:
-    print(f"{it:<15} | {pk:.4f}")
+dados_ex2_4_newton = [{"Iteracao (k)": it, "p_k empirico": round(pk, 4)} for it, pk in ordens_newton]
+# Gera a tabela pelo pandas e imprime em formato markdown no terminal
+df_ex2_4_newton = pd.DataFrame(dados_ex2_4_newton)
+print(df_ex2_4_newton.to_markdown(index=False))
 
 print("\nMETODO DA SECANTE (Teorico: p ~= 1.618)")
-print(f"{'Iteracao (k)':<15} | {'p_k empirico':<15}")
-print("-" * 35)
-for it, pk in ordens_secante:
-    print(f"{it:<15} | {pk:.4f}")
+dados_ex2_4_secante = [{"Iteracao (k)": it, "p_k empirico": round(pk, 4)} for it, pk in ordens_secante]
+# Gera a tabela pelo pandas e imprime em formato markdown no terminal
+df_ex2_4_secante = pd.DataFrame(dados_ex2_4_secante)
+print(df_ex2_4_secante.to_markdown(index=False))
 
 """
 Análise:
@@ -202,11 +204,10 @@ def dfa(x):
 _, hist_a = newton(fa, dfa, x0=0, max_iter=10)
 
 print("\n>> Caso (a): Oscilação")
-print(f"{'k':<5} | {'xk':<15}")
-print("-" * 25)
-
-for item in hist_a:
-    print(f"{item['k']:<5} | {item['xk']:.6f}")
+dados_ex2_5a = [{"k": item['k'], "x": round(item['x'], 6)} for item in hist_a]
+# Gera a tabela pelo pandas e imprime em formato markdown no terminal
+df_ex2_5a = pd.DataFrame(dados_ex2_5a)
+print(df_ex2_5a.to_markdown(index=False))
 
 
 # Caso (b): Estudo de divergência por afastamento utilizando a função arctan(x).
@@ -222,7 +223,7 @@ try:
     _, hist_b2 = newton(fb_caso, dfb_caso, x0=2.0, max_iter=10)
 
     for item in hist_b2[:5]:
-        print(f"k={item['k']}, xk={item['xk']:.4f}")
+        print(f"k={item['k']}, xk={item['x']:.4f}")
 
 except Exception as e:
     print(f"Divergiu/Estourou com OverflowError: {e}")
@@ -234,7 +235,7 @@ try:
     _, hist_b1 = newton(fb_caso, dfb_caso, x0=1.0, max_iter=10)
 
     for item in hist_b1[:5]:
-        print(f"k={item['k']}, xk={item['xk']:.4f}")
+        print(f"k={item['k']}, xk={item['x']:.4f}")
 
 except Exception as e:
     print(f"Erro: {e}")
@@ -245,7 +246,7 @@ print("\n>> Caso (b): Investigando Limite de x0")
 for x_inicial in [1.39, 1.391, 1.40]:
     try:
         _, h = newton(fb_caso, dfb_caso, x0=x_inicial, max_iter=15)
-        print(f"x0 = {x_inicial} convergiu em {len(h)} iteracoes (ultimo xk={h[-1]['xk']:.4f})")
+        print(f"x0 = {x_inicial} convergiu em {len(h)} iteracoes (ultimo xk={h[-1]['x']:.4f})")
 
     except:
         print(f"x0 = {x_inicial} estourou/falhou por divergencia")
@@ -293,25 +294,22 @@ print(">> Newton Tradicional (x0 = 3)")
 # Executa Newton padrão a partir de x0=3 por 10 iterações fixas. Usando _ para ignorar a raiz final retornada, já que o que queremos aqui é o histórico.
 _, hist_mult = newton(f_multipla, df_multipla, x0=3, max_iter=10)
 
-print(f"{'k':<5} | {'Erro ek':<15} | {'ek+1 / ek'}")
-print("-" * 40)
-
 # Extrai o erro absoluto ek = |x_k - 2.0| para todas as iterações
-erros = [abs(item["xk"] - 2.0) for item in hist_mult]
+erros = [abs(item["x"] - 2.0) for item in hist_mult]
 
-# Itera sobre o histórico para calcular e imprimir a razão e_{k+1}/e_k
+dados_ex2_6_trad = []
 for i in range(len(hist_mult)):
-    ek = erros[i] # Erro na iteração atual
-
+    ek = erros[i]
     if i < len(hist_mult) - 1:
-        ek_plus_1 = erros[i+1] # Erro na próxima iteração
-        razao = ek_plus_1 / ek if ek != 0 else 0 # Razão de decaimento do erro
-        
-        print(f"{hist_mult[i]['k']:<5} | {ek:.8e}  | {razao:.4f}")
-
+        ek_plus_1 = erros[i+1]
+        razao = ek_plus_1 / ek if ek != 0 else 0
+        dados_ex2_6_trad.append({"k": hist_mult[i]['k'], "Erro ek": f"{ek:.8e}", "ek+1 / ek": round(razao, 4)})
     else:
-        # A última iteração não possui um e_{k+1} para calcular a razão
-        print(f"{hist_mult[i]['k']:<5} | {ek:.8e}  | -")
+        dados_ex2_6_trad.append({"k": hist_mult[i]['k'], "Erro ek": f"{ek:.8e}", "ek+1 / ek": "-"})
+
+# Gera a tabela pelo pandas e imprime em formato markdown no terminal
+df_ex2_6_trad = pd.DataFrame(dados_ex2_6_trad)
+print(df_ex2_6_trad.to_markdown(index=False))
 
 # Obs: A função de Newton Modificado pedida neste exercício foi implementada no arquivo metodos.py 
 # sob o nome 'newton_modificado', para manter todos os métodos no mesmo local.
@@ -321,12 +319,10 @@ print("\n>> Newton Modificado (m = 2, x0 = 3)")
 # Novamente descartamos a raiz em '_' para focar no histórico do erro
 _, hist_mod = newton_modificado(f_multipla, df_multipla, x0=3, m=2, max_iter=10)
 
-print(f"{'k':<5} | {'Erro ek':<15}")
-print("-" * 25)
-
-for item in hist_mod:
-    ek = abs(item["xk"] - 2.0)
-    print(f"{item['k']:<5} | {ek:.8e}")
+dados_ex2_6_mod = [{"k": item['k'], "Erro ek": f"{abs(item['x'] - 2.0):.8e}"} for item in hist_mod]
+# Gera a tabela pelo pandas e imprime em formato markdown no terminal
+df_ex2_6_mod = pd.DataFrame(dados_ex2_6_mod)
+print(df_ex2_6_mod.to_markdown(index=False))
 
 """
 Análise:
@@ -358,7 +354,7 @@ try:
     _, hist_res_padrao = bisseccao(f_res, 0, 1.5, eps=1e-8)
     
     # Extrai a última raiz aproximada
-    raiz_padrao = hist_res_padrao[-1]['xk']
+    raiz_padrao = hist_res_padrao[-1]['x']
     
     print(f"Raiz obtida: {raiz_padrao:.8f}")
 
@@ -370,7 +366,7 @@ try:
     _, hist_res_passo = bisseccao_apenas_passo(f_res, 0, 1.5, eps=1e-8)
     
     # Extrai a última raiz aproximada
-    raiz_passo = hist_res_passo[-1]['xk']
+    raiz_passo = hist_res_passo[-1]['x']
     
     # Calcula o erro em relação à raiz verdadeira x=1
     erro_passo = abs(raiz_passo - 1.0) 

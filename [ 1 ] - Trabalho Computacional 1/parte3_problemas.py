@@ -1,5 +1,7 @@
 import math
+import pandas as pd
 from metodos import *
+
 
 """
 Problema A — Reservatório Esférico
@@ -111,12 +113,9 @@ for (a_i, b_i) in intervalos:
 print("\n[A.3] Tabela de Altura x Volume (V de 10 a 110 m³)")
 print("-" * 30)
 
-# Imprime os títulos das colunas da tabela
-print(f"{'V (m3)':>8} | {'h (m)':>10}")
-print("-" * 24)
-
 # Cria a lista de volumes alvo espaçados de 10 em 10 m³
 lista_V = list(range(10, 111, 10))
+dados_a3 = []
 
 # Itera sobre todos os volumes alvo desejados e imprime a tabela
 for V in lista_V:
@@ -128,11 +127,11 @@ for V in lista_V:
     # Aplica a bissecção entre 0 e o diâmetro para achar a altura respectiva deste volume
     h_V, _ = bisseccao(f_V, 0, 2*R, eps=eps)
 
-    # Imprime a linha da tabela associando Volume e Altura
-    print(f"{V:8d} | {h_V:10.4f}")
+    dados_a3.append({"V (m3)": V, "h (m)": round(h_V, 4)})
 
-# Imprime a linha debaixo da tabela
-print("-" * 24)
+# Gera a tabela pelo pandas e imprime em formato markdown no terminal
+df_a3 = pd.DataFrame(dados_a3)
+print(df_a3.to_markdown(index=False))
 
 '''
 Análise:
@@ -247,20 +246,14 @@ r_new, h_new = newton(F, dF, f0, eps=eps_tol)
 # Roda o método da secante utilizando o chute empírico e a extremidade de Bolzano
 r_sec, h_sec = secante(F, f0, b_B, eps=eps_tol)
 
-# Imprime o cabeçalho da tabela de desempenho entre métodos
-print(f"{'Método':<12} | {'f encontrado':>14} | {'iterações':>10}")
-
-# Imprime o separador da tabela de desempenho
-print("-" * 42)
-
-# Imprime os resultados performáticos da Bissecção
-print(f"{'Bisseccao':<12} | {r_bis:14.8f} | {len(h_bis):10d}")
-
-# Imprime os resultados performáticos de Newton
-print(f"{'Newton':<12} | {r_new:14.8f} | {len(h_new):10d}")
-
-# Imprime os resultados performáticos da Secante
-print(f"{'Secante':<12} | {r_sec:14.8f} | {len(h_sec):10d}")
+dados_b23 = [
+    {"Método": "Bisseccao", "f encontrado": f"{r_bis:.8f}", "iterações": len(h_bis)},
+    {"Método": "Newton", "f encontrado": f"{r_new:.8f}", "iterações": len(h_new)},
+    {"Método": "Secante", "f encontrado": f"{r_sec:.8f}", "iterações": len(h_sec)}
+]
+# Gera a tabela pelo pandas e imprime em formato markdown no terminal
+df_b23 = pd.DataFrame(dados_b23)
+print(df_b23.to_markdown(index=False))
 
 '''
 Análise:
@@ -412,9 +405,7 @@ O método numérico encontra a raiz pertencente ao intervalo isolado na Fase I, 
 print("\n[C.4] Isoterma P x v para T = 300 K")
 print("-" * 50)
 
-# Imprime o cabeçalho da tabela de isoterma
-print(f"{'P (MPa)':>7} | {'Raízes de van der Waals (m³/mol)'}")
-print("-" * 50)
+dados_c4 = []
 
 # Define as pressões em MPa variando de 1.0 a 10.0 com passo de 0.5
 pressoes_mpa = [1.0 + i*0.5 for i in range(19)]
@@ -459,7 +450,11 @@ for p_mpa in pressoes_mpa:
     
     # Formata e imprime as raízes encontradas
     raizes_str = " | ".join([f"{r:.6e}" for r in raizes_P])
-    print(f"{p_mpa:7.1f} | {raizes_str}")
+    dados_c4.append({"P (MPa)": p_mpa, "Raízes de van der Waals (m³/mol)": raizes_str})
+
+# Gera a tabela pelo pandas e imprime em formato markdown no terminal
+df_c4 = pd.DataFrame(dados_c4)
+print(df_c4.to_markdown(index=False))
 
 
 """
@@ -532,16 +527,16 @@ print(f"Método convergiu em {len(hist_d1)} iterações.")
 print("\n[D.2] Tabela VPL x Taxa (0% a 50%)")
 print("-" * 30)
 
-# Imprime cabeçalho da tabela
-print(f"{'Taxa (%)':>8} | {'VPL (mil R$)':>14}")
-print("-" * 27)
-
 # Gera taxas de 0% a 50% de 5 em 5%
 taxas_tabela = [i/100 for i in range(0, 55, 5)]
+dados_d2 = []
 # Itera e imprime
 for t in taxas_tabela:
-    # Formata cada linha
-    print(f"{t*100:8.1f} | {vpl(t, fluxos_D1):14.2f}")
+    dados_d2.append({"Taxa (%)": t*100, "VPL (mil R$)": round(vpl(t, fluxos_D1), 2)})
+
+# Gera a tabela pelo pandas e imprime em formato markdown no terminal
+df_d2 = pd.DataFrame(dados_d2)
+print(df_d2.to_markdown(index=False))
 
 # -----------------------------------------------------------------------------------------------------
 # D.3 Tome a decisão para custos de capital de 15% e 20%.
