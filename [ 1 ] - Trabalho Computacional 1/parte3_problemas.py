@@ -304,6 +304,311 @@ Como a perda de carga é diretamente proporcional ao fator 'f', imprecisões no 
 
 
 """
+Problema C - Equação de van der Waals
+"""
+
+# ============================================================
+# PROBLEMA C — EQUAÇÃO DE VAN DER WAALS
+# ============================================================
+print("\n" + "="*60)
+print(" PROBLEMA C — EQUAÇÃO DE VAN DER WAALS")
+print("="*60)
+
+# Constante universal dos gases (J/(mol K))
+R = 8.314
+
+# Constante 'a' de van der Waals para o CO2 (Pa m^6/mol^2)
+a = 0.3640
+
+# Constante 'b' de van der Waals para o CO2 (m^3/mol)
+b = 4.267e-5
+
+# Temperatura usada no problema (K)
+T = 300.0
+
+# Pressão inicial (Pa)
+P = 5.0e6
+
+# Função que calcula a equação polinomial de van der Waals para um volume v
+def f_vdw(v, pressao=P):
+    # Equação de van der Waals para v: P*v^3 - (P*b + R*T)*v^2 + a*v - a*b = 0
+    return pressao * v**3 - (pressao * b + R * T) * v**2 + a * v - a * b
+
+# -----------------------------------------------------------------------------------------------------
+# C.1 Determine o volume molar v do gás ideal e usando a equação de van der Waals.
+
+print("\n[C.1] Volume Molar (Gás Ideal vs Van der Waals)")
+print("-" * 50)
+
+# Volume pelo modelo de gás ideal
+v_ideal = R * T / P
+
+# Define o número de pontos para a busca logarítmica
+n_pontos = 5000
+
+# Define os expoentes inicial e final da malha logarítmica (10^-5 a 10^-2)
+log_start, log_end = -5, -2
+
+# Cria a malha de volumes espaçados logaritmicamente sem usar bibliotecas externas
+pontos_v = [10**(log_start + i*(log_end - log_start)/(n_pontos-1)) for i in range(n_pontos)]
+
+# Inicializa o armazenamento das raízes isoladas
+intervalos_C1 = []
+
+# Armazena o volume e o valor da função no ponto anterior para comparação
+v_ant, f_ant = pontos_v[0], f_vdw(pontos_v[0])
+
+# Itera sobre os pontos da malha para encontrar mudanças de sinal
+for v_atual in pontos_v[1:]:
+    # Calcula a função no ponto atual
+    f_atual = f_vdw(v_atual)
+
+    # Verifica se houve troca de sinal
+    if f_ant * f_atual < 0:
+        # Registra o intervalo que contém a raiz
+        intervalos_C1.append((v_ant, v_atual))
+
+    # Atualiza as variáveis para a próxima iteração
+    v_ant, f_ant = v_atual, f_atual
+
+# Pega os limites do primeiro (e único, neste caso) intervalo
+a_c1, b_c1 = intervalos_C1[0]
+
+# Define a tolerância fina para o volume (que tem ordem de grandeza 1e-4)
+eps_c = 1e-12
+
+# Aplica a bissecção para achar o volume molar de van der Waals
+v_vdw, hist_c1 = bisseccao(lambda v: f_vdw(v, P), a_c1, b_c1, eps=eps_c)
+
+# Calcula o erro percentual do gás ideal
+erro_c1 = abs(v_ideal - v_vdw) / abs(v_vdw) * 100
+
+# Imprime os resultados encontrados
+print(f"Volume pelo gás ideal: {v_ideal:.6e} m³/mol")
+print(f"Volume por van der Waals: {v_vdw:.6e} m³/mol")
+print(f"Erro percentual do gás ideal: {erro_c1:.4f}%")
+print(f"Método convergiu em {len(hist_c1)} iterações.")
+
+# -----------------------------------------------------------------------------------------------------
+# C.2 Verifique se há outras raízes na equação sob estas mesmas condições.
+
+print("\n[C.2] Quantidade de Raízes (T = 300K, P = 5MPa)")
+print("-" * 50)
+
+# Imprime a quantidade de intervalos encontrados na mesma faixa
+print(f"Quantidade de raízes encontradas entre 1e-5 e 1e-2 m³/mol: {len(intervalos_C1)}")
+
+'''
+Análise C.2 e C.3:
+Abaixo da temperatura crítica, em certas pressões, a equação cúbica de van der Waals pode apresentar três raízes reais positivas. 
+A menor raiz está associada à fase líquida, a maior à fase vapor, e a raiz intermediária corresponde a uma região instável do modelo. 
+Neste caso específico de T=300K e P=5MPa, o tabelamento mostra apenas 1 raiz real positiva, indicando que o gás está em uma fase única.
+O método numérico encontra a raiz pertencente ao intervalo isolado na Fase I, por isso é importante identificar todos os intervalos com mudança de sinal.
+'''
+
+# -----------------------------------------------------------------------------------------------------
+# C.4 Gere as raízes (isoterma) para pressões variando de 1 a 10 MPa (passo 0.5 MPa).
+
+print("\n[C.4] Isoterma P x v para T = 300 K")
+print("-" * 50)
+
+# Imprime o cabeçalho da tabela de isoterma
+print(f"{'P (MPa)':>7} | {'Raízes de van der Waals (m³/mol)'}")
+print("-" * 50)
+
+# Define as pressões em MPa variando de 1.0 a 10.0 com passo de 0.5
+pressoes_mpa = [1.0 + i*0.5 for i in range(19)]
+
+# Itera sobre cada pressão para encontrar as raízes
+for p_mpa in pressoes_mpa:
+    # Converte a pressão para Pascal
+    p_pa = p_mpa * 1e6
+
+    # Define a função de van der Waals para a pressão específica
+    f_p = lambda v, pressao=p_pa: f_vdw(v, pressao)
+    
+    # Reinicia a lista de intervalos para a nova pressão
+    intervalos_P = []
+
+    # Reseta as variáveis de memória do tabelamento
+    v_ant, f_ant = pontos_v[0], f_p(pontos_v[0])
+    
+    # Itera sobre a malha de volumes logarítmica
+    for v_atual in pontos_v[1:]:
+        # Calcula a função no ponto atual
+        f_atual = f_p(v_atual)
+
+        # Verifica se houve troca de sinal
+        if f_ant * f_atual < 0:
+            # Salva o intervalo encontrado
+            intervalos_P.append((v_ant, v_atual))
+
+        # Atualiza a memória
+        v_ant, f_ant = v_atual, f_atual
+    
+    # Prepara uma lista para as raízes desta pressão
+    raizes_P = []
+
+    # Itera sobre os intervalos encontrados
+    for a_p, b_p in intervalos_P:
+        # Encontra a raiz por bissecção
+        raiz_p, _ = bisseccao(f_p, a_p, b_p, eps=eps_c)
+
+        # Adiciona a raiz refinada à lista
+        raizes_P.append(raiz_p)
+    
+    # Formata e imprime as raízes encontradas
+    raizes_str = " | ".join([f"{r:.6e}" for r in raizes_P])
+    print(f"{p_mpa:7.1f} | {raizes_str}")
+
+
+"""
+Problema D - Taxa Interna de Retorno
+"""
+
+# ============================================================
+# PROBLEMA D — TAXA INTERNA DE RETORNO (TIR)
+# ============================================================
+print("\n" + "="*60)
+print(" PROBLEMA D — TAXA INTERNA DE RETORNO (TIR)")
+print("="*60)
+
+# Fluxos de caixa do projeto 1 (em mil reais)
+fluxos_D1 = [-1000.0, 300.0, 350.0, 400.0, 450.0]
+
+# Função para calcular o Valor Presente Líquido (VPL)
+def vpl(taxa, fluxos):
+    # Soma os fluxos trazidos a valor presente
+    return sum([fluxo / (1.0 + taxa)**ano for ano, fluxo in enumerate(fluxos)])
+
+# -----------------------------------------------------------------------------------------------------
+# D.1 Calcule a TIR do projeto.
+
+print("\n[D.1] Cálculo da TIR")
+print("-" * 30)
+
+# Cria malha de taxas i (0 a 50%) para o tabelamento
+n_taxas = 100
+
+# Gera a lista de taxas com passo igual sem usar linspace
+taxas_i = [0.0 + i*(0.5)/n_taxas for i in range(n_taxas + 1)]
+
+# Inicializa as variáveis do tabelamento
+i_ant, vpl_ant = taxas_i[0], vpl(taxas_i[0], fluxos_D1)
+
+# Variável para armazenar o intervalo da TIR
+intervalo_tir = None
+
+# Procura a raiz no intervalo [0, 0.5]
+for i_atual in taxas_i[1:]:
+    # Calcula o VPL atual
+    vpl_atual = vpl(i_atual, fluxos_D1)
+
+    # Checa mudança de sinal
+    if vpl_ant * vpl_atual < 0:
+        # Salva as extremidades
+        intervalo_tir = (i_ant, i_atual)
+
+    # Atualiza memória
+    i_ant, vpl_ant = i_atual, vpl_atual
+
+# Desempacota os limites
+a_d, b_d = intervalo_tir
+
+# Define a precisão da TIR
+eps_d = 1e-6
+
+# Aplica a bissecção
+tir_1, hist_d1 = bisseccao(lambda i: vpl(i, fluxos_D1), a_d, b_d, eps=eps_d)
+
+# Imprime os resultados
+print(f"TIR encontrada = {tir_1:.6f} ({tir_1*100:.4f}% ao ano)")
+print(f"VPL(TIR) calculado = {vpl(tir_1, fluxos_D1):.6e} mil R$")
+print(f"Método convergiu em {len(hist_d1)} iterações.")
+
+# -----------------------------------------------------------------------------------------------------
+# D.2 Tabela do VPL (Substitui o Gráfico devido a restrição)
+
+print("\n[D.2] Tabela VPL x Taxa (0% a 50%)")
+print("-" * 30)
+
+# Imprime cabeçalho da tabela
+print(f"{'Taxa (%)':>8} | {'VPL (mil R$)':>14}")
+print("-" * 27)
+
+# Gera taxas de 0% a 50% de 5 em 5%
+taxas_tabela = [i/100 for i in range(0, 55, 5)]
+# Itera e imprime
+for t in taxas_tabela:
+    # Formata cada linha
+    print(f"{t*100:8.1f} | {vpl(t, fluxos_D1):14.2f}")
+
+# -----------------------------------------------------------------------------------------------------
+# D.3 Tome a decisão para custos de capital de 15% e 20%.
+
+print("\n[D.3] Decisão para custos de capital (15% e 20%)")
+print("-" * 50)
+
+# Calcula o VPL para 15%
+vpl_15 = vpl(0.15, fluxos_D1)
+
+# Calcula o VPL para 20%
+vpl_20 = vpl(0.20, fluxos_D1)
+
+# Imprime a decisão para 15%
+print(f"VPL a 15% = {vpl_15:6.2f} mil R$ -> {'ACEITAR' if vpl_15 > 0 else 'REJEITAR'} o projeto.")
+
+# Imprime a decisão para 20%
+print(f"VPL a 20% = {vpl_20:6.2f} mil R$ -> {'ACEITAR' if vpl_20 > 0 else 'REJEITAR'} o projeto.")
+
+# -----------------------------------------------------------------------------------------------------
+# D.4 Projeto com múltiplas TIRs (-1000, 2500, -1540).
+
+print("\n[D.4] Projeto com Múltiplas TIRs")
+print("-" * 40)
+
+# Fluxos do projeto 2
+fluxos_D2 = [-1000.0, 2500.0, -1540.0]
+
+# Gera malha de taxas (0 a 80%) para achar todas as TIRs (777 passos para evitar acerto exato na raiz)
+taxas_d2 = [0.0 + i*(0.8)/777 for i in range(778)]
+
+# Variáveis do tabelamento
+i_ant, vpl_ant = taxas_d2[0], vpl(taxas_d2[0], fluxos_D2)
+
+# Cria lista de intervalos vazia
+intervalos_d4 = []
+
+# Busca as mudanças de sinal
+for i_atual in taxas_d2[1:]:
+    # Calcula VPL
+    vpl_atual = vpl(i_atual, fluxos_D2)
+    
+    # Checa inversão
+    if vpl_ant * vpl_atual < 0:
+        # Adiciona a raiz isolada
+        intervalos_d4.append((i_ant, i_atual))
+
+    # Atualiza variáveis
+    i_ant, vpl_ant = i_atual, vpl_atual
+
+# Itera sobre os intervalos encontrados
+for idx, (a_d4, b_d4) in enumerate(intervalos_d4, start=1):
+    # Aplica bissecção
+    tir_2, hist_d4 = bisseccao(lambda i: vpl(i, fluxos_D2), a_d4, b_d4, eps=eps_d)
+
+    # Imprime a TIR achada
+    print(f"TIR {idx} = {tir_2*100:.4f}% ({len(hist_d4)} iterações)")
+
+'''
+Análise D.4:
+Se Newton fosse executado com apenas um chute inicial arbitrário, ele poderia convergir para somente uma das duas TIRs ou divergir completamente. 
+O analista poderia então concluir incorretamente que existe uma única taxa interna de retorno e tomar decisões erradas. 
+A Fase I (tabelamento) é essencial neste caso porque permite visualizar e isolar TODAS as raízes antes da aplicação do refinamento numérico, evitando os perigos de funções não-monotônicas.
+'''
+
+
+"""
 Problema E - Equação de Kepler
 """
 
