@@ -218,14 +218,15 @@ a_B, b_B = intervalo
 # Define a tolerância baixíssima de precisão numérica requerida no enunciado (1e-8)
 eps_tol = 1e-8
 
-# Aplica a bissecção para isolar o fator f até a tolerância fina estabelecida
-f_b1, hist_b1 = bisseccao(F, a_B, b_B, eps=eps_tol)
+# Aplica o método da Secante (ótimo para Colebrook-White)
+f0 = 0.25 / (math.log10(A + 5.74/Re**0.9))**2
+f_b1, hist_b1 = secante(F, f0, b_B, eps=eps_tol)
 
 # Imprime a raiz refinada na saída do terminal
 print(f"f = {f_b1:.6f}")
 
 # Imprime o total de iterações necessárias
-print(f"Método da Bissecção convergiu em {len(hist_b1)} iterações.")
+print(f"Método da Secante convergiu em {len(hist_b1)} iterações.")
 
 
 # -----------------------------------------------------------------------------------------------------
