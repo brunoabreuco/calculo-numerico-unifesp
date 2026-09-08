@@ -218,14 +218,15 @@ a_B, b_B = intervalo
 # Define a tolerância baixíssima de precisão numérica requerida no enunciado (1e-8)
 eps_tol = 1e-8
 
-# Aplica a bissecção para isolar o fator f até a tolerância fina estabelecida
-f_b1, hist_b1 = bisseccao(F, a_B, b_B, eps=eps_tol)
+# Aplica o método da Secante (ótimo para Colebrook-White)
+f0 = 0.25 / (math.log10(A + 5.74/Re**0.9))**2
+f_b1, hist_b1 = secante(F, f0, b_B, eps=eps_tol)
 
 # Imprime a raiz refinada na saída do terminal
 print(f"f = {f_b1:.6f}")
 
 # Imprime o total de iterações necessárias
-print(f"Método da Bissecção convergiu em {len(hist_b1)} iterações.")
+print(f"Método da Secante convergiu em {len(hist_b1)} iterações.")
 
 
 # -----------------------------------------------------------------------------------------------------
@@ -813,18 +814,18 @@ Ou seja, o programa quebra e levanta um ERRO. A correção é não usar a viga i
 print("\n[F.4] Derivada Numérica vs Analítica")
 print("-" * 40)
 
-# Raiz exata analítica: x = L / sqrt(5)
-x_exact = L / math.sqrt(5)
+# Ponto de teste genérico da viga (x = 100 cm) para evitar que a terceira derivada anule o erro de truncamento
+x_test = 100.0
 
 h_values = [1e-2, 1e-4, 1e-6, 1e-8, 1e-10]
 errors = []
 
 for h in h_values:
-    # Derivada numérica avaliada diretamente na raiz exata
-    deriv_num = (y_x(x_exact + h) - y_x(x_exact - h)) / (2 * h)
+    # Derivada numérica avaliada diretamente no ponto de teste
+    deriv_num = (y_x(x_test + h) - y_x(x_test - h)) / (2 * h)
     
-    # Calcula o erro em relação à derivada analítica na raiz exata (que é zero, mas fazemos a diferença)
-    error = abs(deriv_num - dy_dx(x_exact))
+    # Calcula o erro absoluto em relação à derivada analítica
+    error = abs(deriv_num - dy_dx(x_test))
     errors.append(error)
     print(f"h = {h:.0e} | dy_dx_num = {deriv_num:.6e} | erro = {error:.2e}")
 
